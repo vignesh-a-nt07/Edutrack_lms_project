@@ -13,18 +13,26 @@ RUN npm ci
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy full project
 COPY . .
 
-# Set environment variables for build
+# Install drizzle-kit locally (required for drizzle.config.js import)
+RUN npm install -D drizzle-kit
+
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application
 RUN npm run build
 
-# Production image, copy all the files and run next
+# Production image
 FROM base AS runner
 WORKDIR /app
+
+# Copy node_modules so drizzle.config.js can import drizzle-kit
+COPY --from=builder /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -32,15 +40,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files
+# Copy built files
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy other necessary files
+# Copy support files
 COPY --from=builder /app/configs ./configs
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/contexts ./contexts
+COPY --from=builder /app/drizzle.config.js ./drizzle.config.js
 
 USER nextjs
 

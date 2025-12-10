@@ -1,16 +1,11 @@
 #!/bin/bash
 
-# Database migration script for Docker
-# Run this after starting the Docker containers
-
 echo "🗄️  Running database migrations..."
-
-# Wait for database to be ready
 echo "Waiting for database to be ready..."
 sleep 5
 
-# Run migrations
-docker compose exec app npx drizzle-kit push
+# Run Drizzle migrations inside the app container
+docker compose exec app npx drizzle-kit push --config=drizzle.config.js
 
 if [ $? -eq 0 ]; then
     echo "✅ Database migrations completed successfully!"
