@@ -3,7 +3,7 @@ variable "aws_region" {
 }
 
 variable "project_name" {
-  default = "edutrack"
+  default = "lms-vicky"
 }
 
 variable "container_port" {
